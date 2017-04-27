@@ -29,22 +29,22 @@ foobar = 42.0000000042
 
 # You can declare a function formally...
 
-function funtimes(x,y,z=0)
+function fun_times(x,y,z=0)
   return x*y+z
 end
 
-funtimes(1,2,3)
-funtimes(1,2)
+fun_times(1,2,3)
+fun_times(1,2)
 
 # The z is optional and has a default. This is similar to R
 # you can make varialbes that are actually collections as well by using
 # an ellipse
 
-function morefuntimes(x,y,z...)
+function more_fun_times(x,y,z...)
   return map(zed -> zed/(x+y), z) # map a lambda to an array
 end
 
-z_collection = morefuntimes(1, 2, 5, 10, 15, 20, 25)
+z_collection = more_fun_times(1, 2, 5, 10, 15, 20, 25)
 
 typeof(z_collection)
 
@@ -79,9 +79,92 @@ radiivec
 # arrays are "wicked powerful" in Julia. You can use vectors
 # and arrays in very interesting and useful ways in Julia.
 
-verticalarray = [1,2,3,4,5] # this is of type Vector
-horizontalarray = [11 22 33 44 55] # this is of type Matrix
+vertical_array = [1,2,3,4,5] # this is of type Vector
+horizontal_array = [11 22 33 44 55] # this is of type Matrix
 
 # the commas make all the difference
 
-mymatrix = [1 1; 2 2; 3 3] # This makes a 3x2 Array
+my_matrix = [1 1; 2 2; 3 3] # This makes a 3x2 Array
+
+my_big_matrix = randn(10,10)
+
+# the basic arithmetic functions already work elementwise on
+# things like this matrix. example
+
+transformed_matrix = my_big_matrix * 5
+
+# however, most other things do not work this way.
+
+# this fails, because the compare operator does not work
+# elementwise across the matrix.
+transformed_matrix > 3
+
+# this works, because the dot operator vectorizes the comparison!
+transformed_matrix .> 3
+
+# lets use the dot notation to broadcast a parse to strings to
+# create an array of integers. Consider the following string:
+
+s = "1 2 3 4 5"
+
+# iterating this and creating an array is actually pretty darn easy
+
+numbers = split(s) # ok close but they are still strings
+
+parse(numbers[1]) #Even closer
+
+int_s =  parse.(split(s)) # the dot broadcasts the parse to the vector
+
+# another way is to use an array comprehension
+int_s = [parse(Int, ss) for ss in split(s)]
+
+# neither way is more correct. There are always alternative means to any end.
+
+# here is another matrix
+x = randn(10,10)
+x2 = copy(x) # we use copy because = will only refer back to x!
+
+# lets look at some interesting iterators
+
+for i in CartesianRange(size(x))
+  x2[i] = sqrt(abs(x[i]))
+end
+
+# adding new functionality is easy if you have a
+# github account (free). Julia comes with git built in
+# but is compatible with whatever version of git you have
+# installed locally
+
+# Pkg.add("DeepDiffs")
+# Pkg.update()
+
+# Here is how to include a package
+using DeepDiffs
+
+deepdiff([1,2,7,3],[2,3,4,1,2,3,5])
+
+# this shows how to turn vector a into vector b.
+
+using Gadfly # julia's version of The Grammar of Graphics
+using RDatasets # those familiar with R will recognize these sets
+
+iris = dataset("datasets", "iris")
+p = plot(iris, x=:SepalLength, y=:SepalWidth, Geom.point)
+img = SVG("iris_plot.svg", 12inch, 8inch)
+draw(img, p)
+
+function get_to_it(d)
+  ppoint = plot(d, x=:SepalLength, y=:SepalWidth, Geom.point)
+  pline = plot(d, x=:SepalLength, y=:SepalWidth, Geom.line)
+  ppoint, pline
+end
+ps = get_to_it(iris)
+map(display, ps)
+
+plot(iris, x=:SepalLength, y=:SepalWidth, Geom.point, Geom.line)
+
+plot(iris, x=:SepalLength, y=:SepalWidth, color=:Species, Geom.point)
+
+gasoline = dataset("Ecdat", "Gasoline")
+
+plot(gasoline, x=:Year, y=:LGasPCar, color=:Country, Geom.point, Geom.line)
